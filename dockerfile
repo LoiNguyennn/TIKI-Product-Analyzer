@@ -13,9 +13,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-COPY .env .
-COPY ./app/static ./app/static
-COPY ./app/templates ./app/templates
 
 EXPOSE 5000
 
