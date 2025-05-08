@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân tích sản phẩm Tiki | ITTools</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+
+<body>
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="badges">
+                    <span class="badge open-source">Open Source</span>
+                    <span class="badge free">Free</span>
+                    <span class="badge hostable">Self-hostable</span>
+                </div>
+                <h1>Phân tích sản phẩm Tiki</h1>
+                <p class="subtitle">Phân tích sản phẩm trên Tiki và nhận thông tin chi tiết về đánh giá, giá cả và hơn
+                    thế nữa.</p>
+
+                <div class="analyzer-container">
+                    <form id="analyze-form">
+                        <div class="input-group">
+                            <input type="text" name="url" placeholder="Dán URL sản phẩm Tiki tại đây" required>
+                            <button type="submit">Phân tích</button>
+                        </div>
+                    </form>
+                    <div id="loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>Đang phân tích dữ liệu sản phẩm...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="results-section">
+            <div class="container">
+                <div id="error" class="error"></div>
+                <div id="result" class="result-container"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 - <span class="logo-text">NGUYEN PHUC LOI</span> - <a href="https://github.com/LoiNguyennn/IT-Tools-for-Developers" target="_blank" title="GitHub">
+                <i class="fab fa-github"></i>
+            </a></p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('analyze-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.querySelector('input[name="url"]').value;
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            errorDiv.textContent = '';
+            resultDiv.innerHTML = '';
+            loadingDiv.style.display = 'flex';
+
+            try {
+                const response = await fetch('/api/tiki/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await response.json();
+
+                loadingDiv.style.display = 'none';
+
+                if (response.ok) {
+                    const info = data.data.information;
+                    const summary = data.data.summary;
+                    const positive = data.data.positive_comments;
+                    const negative = data.data.negative_comments;
+                    const neutral = data.data.neutral_comments;
+
+                    const productHTML = `
+                    <div class="review-analysis">
+                            <h2>Phân tích đánh giá</h2>
+                            
+                            <div class="summary-card">
+                                <div class="summary-header">
+                                    <div class="ai-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <h3>Tóm tắt thông minh</h3>
+                                </div>
+                                <div class="summary-content">${summary}</div>
+                            </div>
+                            
+                            <div class="reviews-container">
+                                <div class="review-section">
+                                    <h3>Đánh giá tích cực (${positive.length})</h3>
+                                    <ul class="review-list positive-list">
+                                        ${positive.map(c => `<li class="review-item positive">${c}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                
+                                <div class="review-section">
+                                    <h3>Đánh giá tiêu cực (${negative.length})</h3>
+                                    <ul class="review-list negative-list">
+                                        ${negative.map(c => `<li class="review-item negative">${c}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                
+                                <div class="review-section">
+                                    <h3>Đánh giá trung lập (${neutral.length})</h3>
+                                    <ul class="review-list neutral-list">
+                                        ${neutral.map(c => `<li class="review-item neutral">${c}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>    
+                    
+                    <div class="product-info">
+                            <div class="product-header">
+                                <h2>${info.name}</h2>
+                                <div class="product-meta">
+                                    <div class="meta-item">
+                                        <span class="label">Giá:</span>
+                                        <span class="value">${info.price.toLocaleString()} VNĐ</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="label">Đã bán:</span>
+                                        <span class="value">${info.sold}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="label">Đánh giá:</span>
+                                        <span class="value">${info.rating} ★</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="label">Danh mục:</span>
+                                        <p>${info.categories}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="product-gallery">
+                                <div class="carousel-container">
+                                    ${info.images.map(img => `
+                                        <div class="carousel-slide">
+                                            <div class="product-image">
+                                                <img src="${img}" alt="Hình ảnh sản phẩm">
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div class="carousel-controls">
+                                    <button class="carousel-button prev-button"><</button>
+                                    <button class="carousel-button next-button">></button>
+                                </div>
+                                
+                                <div class="carousel-indicators">
+                                    ${info.images.map((_, index) => `
+                                        <div class="carousel-dot ${index === 0 ? 'active' : ''}"></div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="product-details">
+                                <div class="detail-card">
+                                    <p>${info.description}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    resultDiv.innerHTML = productHTML;
+                    initCarousel();
+                } else {
+                    errorDiv.textContent = data.message || 'Đã xảy ra lỗi khi phân tích sản phẩm.';
+                }
+            } catch (err) {
+                loadingDiv.style.display = 'none';
+                errorDiv.textContent = 'Đã xảy ra lỗi. Vui lòng thử lại!';
+                console.error(err);
+            }
+        });
+
+        function initCarousel() {
+            const carousels = document.querySelectorAll('.product-gallery');
+
+            carousels.forEach(carousel => {
+                const container = carousel.querySelector('.carousel-container');
+                const slides = carousel.querySelectorAll('.carousel-slide');
+                const prevButton = carousel.querySelector('.prev-button');
+                const nextButton = carousel.querySelector('.next-button');
+                const dots = carousel.querySelectorAll('.carousel-dot');
+
+                let currentIndex = 0;
+                const slideCount = slides.length;
+
+                updateCarousel();
+
+                prevButton.addEventListener('click', () => {
+                    currentIndex = (currentIndex - 1 + slideCount) % slideCount;
+                    updateCarousel();
+                });
+
+                nextButton.addEventListener('click', () => {
+                    currentIndex = (currentIndex + 1) % slideCount;
+                    updateCarousel();
+                });
+
+                dots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => {
+                        currentIndex = index;
+                        updateCarousel();
+                    });
+                });
+
+                function updateCarousel() {
+                    let offset = 0;
+                    for (let i = 0; i < currentIndex; i++) {
+                        offset += slides[i].offsetWidth;
+                    }
+                    container.style.transform = `translateX(-${offset}px)`;
+
+                    dots.forEach((dot, index) => {
+                        dot.classList.toggle('active', index === currentIndex);
+                    });
+                }
+
+                window.addEventListener('resize', updateCarousel);
+            });
+        }
+
+        function initSummaryEffects() {
+            const summaryCard = document.querySelector('.summary-card');
+            if (!summaryCard) return;
+
+            // Thêm hiệu ứng làm nổi bật từ khóa quan trọng trong nội dung tóm tắt
+            const summaryContent = summaryCard.querySelector('.summary-content');
+            if (summaryContent) {
+                // Danh sách từ khóa quan trọng cần highlight
+                const keywords = ['cao cấp', 'chất lượng', 'tốt', 'kém', 'đáng giá', 'giá trị', 'cao', 'thấp', 'bền'];
+
+                // Tìm và highlight các từ khóa
+                let content = summaryContent.innerHTML;
+                keywords.forEach(keyword => {
+                    const regex = new RegExp(`(${keyword})`, 'gi');
+                    content = content.replace(regex, '<span class="highlight-keyword">$1</span>');
+                });
+
+                summaryContent.innerHTML = content;
+            }
+        }
+    </script>
+</body>
+
+</html>

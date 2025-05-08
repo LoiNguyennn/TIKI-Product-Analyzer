@@ -1,0 +1,19 @@
+# Ignore Python bytecode cache files in specific folders
+utils/__pycache__/
+services/__pycache__/
+template/__pycache__/
+
+# Ignore all __pycache__ directories recursively
+**/__pycache__/
+
+# Ignore virtual environment directory
+venv/
+
+# Optional: Ignore other common unnecessary files
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env
+*.log
